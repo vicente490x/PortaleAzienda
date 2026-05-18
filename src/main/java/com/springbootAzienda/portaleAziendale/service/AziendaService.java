@@ -28,7 +28,11 @@ public class AziendaService {
     }
     
     private AziendaEntity toEntity(AziendaDTO dto) {
-        return new AziendaEntity(dto.getNome(), dto.getPIva());
+        AziendaEntity e = new AziendaEntity();
+        e.setId(dto.getId());
+        e.setNome(dto.getNome());
+        e.setPIva(dto.getPIva());
+        return e;
     }
     
 
@@ -45,7 +49,8 @@ public class AziendaService {
     }
 
     public AziendaDTO insertAzienda(AziendaDTO dto) {
-        AziendaEntity a = new AziendaEntity(dto.getNome(), dto.getPIva());
+        AziendaEntity a = toEntity(dto);
+        a.setId(null);
         return toDTO(repo.save(a));
     }
 
