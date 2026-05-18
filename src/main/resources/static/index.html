@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestionale Aziendale</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════ -->
+<aside id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">🏢</div>
+    <div>
+      <div class="sidebar-brand-name">Gestionale</div>
+      <div class="sidebar-brand-sub">Aziendale v1.0</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Entità</div>
+
+    <button class="nav-link-item active" data-page="aziende" onclick="showPage('aziende')">
+      <span class="nav-icon"><i class="bi bi-building"></i></span>
+      Aziende
+    </button>
+
+    <button class="nav-link-item" data-page="sedi" onclick="showPage('sedi')">
+      <span class="nav-icon"><i class="bi bi-geo-alt"></i></span>
+      Sedi
+    </button>
+
+    <button class="nav-link-item" data-page="dipendenti" onclick="showPage('dipendenti')">
+      <span class="nav-icon"><i class="bi bi-people"></i></span>
+      Dipendenti
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      localhost:8080
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════ -->
+<div id="topbar">
+  <div class="topbar-title" id="topbar-title">Aziende</div>
+  <div class="topbar-right">
+    <span class="badge bg-primary-subtle text-primary" style="font-size:.72rem">Spring Boot</span>
+    <span class="badge bg-success-subtle text-success" style="font-size:.72rem">SQLite</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════ -->
+<div id="main-content">
+  <div class="content-area">
+
+    <!-- STAT CARDS (visibili su tutte le pagine) -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="bi bi-building"></i></div>
+          <div>
+            <div class="stat-value" id="stat-aziende">–</div>
+            <div class="stat-label">Aziende totali</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="bi bi-geo-alt"></i></div>
+          <div>
+            <div class="stat-value" id="stat-sedi">–</div>
+            <div class="stat-label">Sedi totali</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div class="stat-icon amber"><i class="bi bi-people"></i></div>
+          <div>
+            <div class="stat-value" id="stat-dipendenti">–</div>
+            <div class="stat-label">Dipendenti totali</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: AZIENDE
+    ══════════════════════════════ -->
+    <div id="page-aziende" class="page active">
+
+      <!-- Form -->
+      <div class="section-card mb-4">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <i class="bi bi-plus-circle text-primary"></i>
+            <span id="azienda-form-title">Nuova Azienda</span>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <input type="hidden" id="azienda-id">
+          <div class="row g-3">
+            <div class="col-md-5">
+              <label class="form-label">Nome Azienda</label>
+              <input type="text" class="form-control" id="azienda-nome" placeholder="es. Fiat SpA">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Partita IVA</label>
+              <input type="text" class="form-control" id="azienda-piva" placeholder="es. 00478750018">
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+              <button class="btn btn-primary w-100" onclick="AziendeModule.save()">
+                <i class="bi bi-check-lg me-1"></i>Salva
+              </button>
+              <button class="btn btn-outline-secondary" onclick="AziendeModule.reset()" title="Reset">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabella -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <i class="bi bi-table text-muted"></i>
+            Lista Aziende
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" onclick="AziendeModule.load()">
+            <i class="bi bi-arrow-clockwise"></i> Aggiorna
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table custom-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Partita IVA</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-aziende"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: SEDI
+    ══════════════════════════════ -->
+    <div id="page-sedi" class="page">
+
+      <!-- Form -->
+      <div class="section-card mb-4">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <i class="bi bi-plus-circle text-primary"></i>
+            <span id="sede-form-title">Nuova Sede</span>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <input type="hidden" id="sede-id">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Città</label>
+              <input type="text" class="form-control" id="sede-citta" placeholder="es. Milano">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Via</label>
+              <input type="text" class="form-control" id="sede-via" placeholder="es. Via Roma 10">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Azienda</label>
+              <select class="form-select" id="sede-azienda-select">
+                <option value="" disabled selected>Seleziona azienda</option>
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+              <button class="btn btn-primary w-100" onclick="SediModule.save()">
+                <i class="bi bi-check-lg me-1"></i>Salva
+              </button>
+              <button class="btn btn-outline-secondary" onclick="SediModule.reset()" title="Reset">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtro + Tabella -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <i class="bi bi-table text-muted"></i>
+            Lista Sedi
+          </div>
+          <div class="filter-bar">
+            <select class="form-select form-select-sm" id="filter-sedi-azienda" onchange="SediModule.load()">
+              <option value="">Tutte le aziende</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" onclick="SediModule.load()">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table custom-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Città</th>
+                <th>Via</th>
+                <th>Azienda</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-sedi"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: DIPENDENTI
+    ══════════════════════════════ -->
+    <div id="page-dipendenti" class="page">
+
+      <!-- Form -->
+      <div class="section-card mb-4">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <i class="bi bi-plus-circle text-primary"></i>
+            <span id="dip-form-title">Nuovo Dipendente</span>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <input type="hidden" id="dip-id">
+          <div class="row g-3">
+            <div class="col-md-2">
+              <label class="form-label">Nome</label>
+              <input type="text" class="form-control" id="dip-nome" placeholder="Mario">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Cognome</label>
+              <input type="text" class="form-control" id="dip-cognome" placeholder="Rossi">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Anni Esp.</label>
+              <input type="number" class="form-control" id="dip-anni" placeholder="5" min="0">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Sede</label>
+              <select class="form-select" id="dip-sede-select">
+                <option value="" disabled selected>Seleziona sede</option>
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+              <button class="btn btn-primary w-100" onclick="DipendentiModule.save()">
+                <i class="bi bi-check-lg me-1"></i>Salva
+              </button>
+              <button class="btn btn-outline-secondary" onclick="DipendentiModule.reset()" title="Reset">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtro + Tabella -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <i class="bi bi-table text-muted"></i>
+            Lista Dipendenti
+          </div>
+          <div class="filter-bar">
+            <select class="form-select form-select-sm" id="filter-dip-sede" onchange="DipendentiModule.load()">
+              <option value="">Tutte le sedi</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" onclick="DipendentiModule.load()">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table custom-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Cognome</th>
+                <th>Esperienza</th>
+                <th>Sede</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-dipendenti"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+</div><!-- /main-content -->
+
+<!-- ══════════════════════════════
+     MODAL CONFERMA ELIMINAZIONE
+════════════════════════════════ -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-semibold">
+          <i class="bi bi-exclamation-triangle text-danger me-2"></i>Conferma eliminazione
+        </h6>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="text-muted mb-0" style="font-size:.85rem" id="confirmMessage">
+          Sei sicuro di voler eliminare questo elemento?
+        </p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annulla</button>
+        <button type="button" class="btn btn-danger btn-sm" id="confirmYes">
+          <i class="bi bi-trash me-1"></i>Elimina
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container" class="toast-container-custom"></div>
+
+<!-- ══════════════════════════════
+     SCRIPTS
+════════════════════════════════ -->
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- App JS (ordine importante) -->
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/aziende.js"></script>
+<script src="js/sedi.js"></script>
+<script src="js/dipendenti.js"></script>
+
+<script>
+  // Carica tutte le stat al boot
+  async function loadAllStats() {
+    try {
+      const [az, se, di] = await Promise.all([
+        AziendaAPI.lista(),
+        SedeAPI.lista(),
+        DipendenteAPI.lista()
+      ]);
+      updateStatCard('stat-aziende',    az.length);
+      updateStatCard('stat-sedi',       se.length);
+      updateStatCard('stat-dipendenti', di.length);
+    } catch(e) {}
+  }
+
+  // Init
+  AziendeModule.load();
+  loadAllStats();
+</script>
+</body>
+</html>
