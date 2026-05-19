@@ -25,11 +25,7 @@ public class SedeEntity {
 
     public SedeEntity() {}
 
-    public SedeEntity(String citta, String via, AziendaEntity azienda) {
-        this.citta = citta;
-        this.via = via;
-        this.azienda = azienda;
-    }
+    
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

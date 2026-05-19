@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.springbootAzienda.portaleAziendale.dto.DipendenteDTO;
+import com.springbootAzienda.portaleAziendale.dto.DipendenteDetailDTO;
 import com.springbootAzienda.portaleAziendale.entity.DipendenteEntity;
 import com.springbootAzienda.portaleAziendale.entity.SedeEntity;
 import com.springbootAzienda.portaleAziendale.repository.DipendenteRepository;
@@ -58,15 +59,26 @@ public class DipendenteService {
                 .orElseThrow(() -> new NoSuchElementException("Dipendente non trovato"));
     }
 
-    public List<DipendenteDTO> getDipendentiBySede(Long sedeId) {
+    public List<DipendenteDetailDTO> getDipendentiBySede(Long sedeId) {
         sedeRepo.findById(sedeId)
                 .orElseThrow(() -> new NoSuchElementException("Sede non trovata"));
 
-        return dipendenteRepo.findBySede_Id(sedeId).stream()
-                .map(this::toDTO)
+        return dipendenteRepo.findAll().stream()
+                .filter(d -> d.getSede().getId().equals(sedeId))
+                .map(d -> new DipendenteDetailDTO(
+                        d.getId(),
+                        d.getNome(),
+                        d.getCognome(),
+                        d.getAnniEsperienza(),
+                        d.getSede().getCitta(),
+                        d.getSede().getVia(),
+                        d.getSede().getAzienda().getNome()
+                ))
                 .collect(Collectors.toList());
     }
-
+    
+    
+    
     public DipendenteDTO insertDipendente(DipendenteDTO dto) {
         DipendenteEntity saved = dipendenteRepo.save(toEntity(dto));
         return toDTO(saved);

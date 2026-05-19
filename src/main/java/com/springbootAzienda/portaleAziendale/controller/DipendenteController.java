@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.springbootAzienda.portaleAziendale.dto.DipendenteDTO;
+import com.springbootAzienda.portaleAziendale.dto.DipendenteDetailDTO;
 import com.springbootAzienda.portaleAziendale.service.DipendenteService;
 
 @RestController
@@ -35,7 +36,7 @@ public class DipendenteController {
     }
 
     @GetMapping("/sede/{sedeId}")
-    public List<DipendenteDTO> getDipendentiBySede(@PathVariable Long sedeId) {
+    public List<DipendenteDetailDTO> getDipendentiBySede(@PathVariable Long sedeId) {
         return service.getDipendentiBySede(sedeId);
     }
 

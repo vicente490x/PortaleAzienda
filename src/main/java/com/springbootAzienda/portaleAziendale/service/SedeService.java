@@ -34,11 +34,15 @@ public class SedeService {
     }
     
     private SedeEntity toEntity(SedeDTO dto) {
-        AziendaEntity azienda = aziendaRepo.findById(dto.getAziendaId())
-                .orElseThrow(() -> new NoSuchElementException("Azienda non trovata"));
+		AziendaEntity azienda = aziendaRepo.findById(dto.getAziendaId())
+				.orElseThrow(() -> new NoSuchElementException("Azienda non trovata"));
 
-        return new SedeEntity(dto.getCitta(), dto.getVia(), azienda);
-    }
+		SedeEntity sede = new SedeEntity();
+		sede.setCitta(dto.getCitta());
+		sede.setVia(dto.getVia());
+		sede.setAzienda(azienda);
+		return sede;
+	}	
 
     public List<SedeDTO> getSedi() {
         return sedeRepo.findAll().stream()

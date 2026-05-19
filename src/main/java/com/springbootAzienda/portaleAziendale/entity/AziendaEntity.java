@@ -26,10 +26,6 @@ public class AziendaEntity {
 
     public AziendaEntity() {}
 
-    public AziendaEntity(String nome, String pIva) {
-        this.nome = nome;
-        this.pIva = pIva;
-    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

@@ -1,122 +1,72 @@
 const SediModule = (() => {
-
   let _data = [];
 
-  // ── LOAD ──
   async function load() {
-    setLoading('tbody-sedi', 5);
-    await _loadAziendeSelects();
+    loading('tb-sedi', 5);
+    await _fillAziende();
     try {
-      const filtroAzienda = document.getElementById('filter-sedi-azienda').value;
-      if (filtroAzienda) {
-        _data = await SedeAPI.byAzienda(filtroAzienda);
-      } else {
-        _data = await SedeAPI.lista();
-      }
-      render();
-      updateStatCard('stat-sedi', _data.length);
-    } catch (e) {
-      showToast('Errore nel caricamento delle sedi', 'error');
-    }
+      const filtro = document.getElementById('fl-sede-az').value;
+      _data = filtro ? await SedeAPI.byAzienda(filtro) : await SedeAPI.lista();
+      render(); stat('st-sedi', _data.length);
+    } catch(e) { toast('Errore sedi', 'err'); }
   }
 
-  // ── POPOLA SELECT AZIENDE ──
-  async function _loadAziendeSelects() {
+  async function _fillAziende() {
     try {
-      const aziende = await AziendaAPI.lista();
-      const opts = aziende.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
-
-      document.getElementById('sede-azienda-select').innerHTML =
-        '<option value="" disabled selected>Seleziona azienda</option>' + opts;
-
-      document.getElementById('filter-sedi-azienda').innerHTML =
-        '<option value="">Tutte le aziende</option>' + opts;
-    } catch (e) {}
+      const list = await AziendaAPI.lista();
+      const opts = list.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+      document.getElementById('sede-az-sel').innerHTML  = '<option value="" disabled selected>Seleziona...</option>' + opts;
+      document.getElementById('fl-sede-az').innerHTML   = '<option value="">Tutte le aziende</option>' + opts;
+    } catch(e) {}
   }
 
-  // ── RENDER TABLE ──
   function render() {
-    const tbody = document.getElementById('tbody-sedi');
-    if (!_data.length) {
-      setEmpty('tbody-sedi', 5, 'Nessuna sede presente');
-      return;
-    }
-    tbody.innerHTML = _data.map(s => `
+    const tb = document.getElementById('tb-sedi');
+    if (!_data.length) { empty('tb-sedi', 5, 'Nessuna sede'); return; }
+    tb.innerHTML = _data.map(s => `
       <tr>
-        <td><span class="badge-id">#${s.id}</span></td>
-        <td><strong>${s.citta}</strong></td>
+        <td><span class="tag tag-id">#${s.id}</span></td>
+        <td class="td-main">${s.citta}</td>
         <td>${s.via}</td>
-        <td><span class="badge-tag">${s.aziendaNome}</span></td>
+        <td><span class="tag tag-neon">${s.aziendaNome}</span></td>
         <td>
-          <button class="btn btn-outline-primary btn-sm me-1" onclick="SediModule.edit(${s.id})">
-            <i class="bi bi-pencil"></i> Modifica
-          </button>
-          <button class="btn btn-outline-danger btn-sm" onclick="SediModule.remove(${s.id})">
-            <i class="bi bi-trash"></i> Elimina
-          </button>
+          <button class="btn btn-sky btn-sm me-1" onclick="SediModule.edit(${s.id})">✎ modifica</button>
+          <button class="btn btn-coral btn-sm" onclick="SediModule.remove(${s.id})">✕ elimina</button>
         </td>
       </tr>`).join('');
   }
 
-  // ── SAVE ──
   async function save() {
     const id        = document.getElementById('sede-id').value;
     const citta     = document.getElementById('sede-citta').value.trim();
     const via       = document.getElementById('sede-via').value.trim();
-    const aziendaId = parseInt(document.getElementById('sede-azienda-select').value);
-
-    if (!citta || !via || !aziendaId) {
-      showToast('Compila tutti i campi', 'error');
-      return;
-    }
-
+    const aziendaId = +document.getElementById('sede-az-sel').value;
+    if (!citta || !via || !aziendaId) { toast('Compila tutti i campi', 'err'); return; }
     try {
-      if (id) {
-        await SedeAPI.update({ id: parseInt(id), citta, via, aziendaId });
-        showToast('Sede aggiornata con successo');
-      } else {
-        await SedeAPI.insert({ citta, via, aziendaId });
-        showToast('Sede creata con successo');
-      }
-      reset();
-      load();
-    } catch (e) {
-      showToast(e.message, 'error');
-    }
+      if (id) { await SedeAPI.update({ id: +id, citta, via, aziendaId }); toast('Sede aggiornata'); }
+      else    { await SedeAPI.insert({ citta, via, aziendaId }); toast('Sede creata'); }
+      reset(); load();
+    } catch(e) { toast(e.message, 'err'); }
   }
 
-  // ── EDIT ──
   function edit(id) {
     const s = _data.find(x => x.id === id);
-    if (!s) return;
-
-    document.getElementById('sede-id').value             = s.id;
-    document.getElementById('sede-citta').value          = s.citta;
-    document.getElementById('sede-via').value            = s.via;
-    document.getElementById('sede-azienda-select').value = s.aziendaId;
-    document.getElementById('sede-form-title').textContent = `Modifica Sede #${s.id}`;
-    document.getElementById('sede-citta').focus();
+    document.getElementById('sede-id').value     = s.id;
+    document.getElementById('sede-citta').value  = s.citta;
+    document.getElementById('sede-via').value    = s.via;
+    document.getElementById('sede-az-sel').value = s.aziendaId;
+    document.getElementById('sede-form-title').textContent = `Modifica Sede #${id}`;
   }
 
-  // ── DELETE ──
   async function remove(id) {
-    const ok = await showConfirm('Sei sicuro di voler eliminare questa sede?');
-    if (!ok) return;
-    try {
-      await SedeAPI.delete(id);
-      showToast('Sede eliminata');
-      load();
-    } catch (e) {
-      showToast(e.message, 'error');
-    }
+    if (!await confirm('Eliminare questa sede?')) return;
+    try { await SedeAPI.delete(id); toast('Sede eliminata'); load(); }
+    catch(e) { toast(e.message, 'err'); }
   }
 
-  // ── RESET ──
   function reset() {
-    document.getElementById('sede-id').value             = '';
-    document.getElementById('sede-citta').value          = '';
-    document.getElementById('sede-via').value            = '';
-    document.getElementById('sede-azienda-select').value = '';
+    ['sede-id','sede-citta','sede-via'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('sede-az-sel').value = '';
     document.getElementById('sede-form-title').textContent = 'Nuova Sede';
   }
 

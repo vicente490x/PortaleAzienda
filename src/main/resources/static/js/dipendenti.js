@@ -1,127 +1,76 @@
 const DipendentiModule = (() => {
-
   let _data = [];
 
-  // ── LOAD ──
   async function load() {
-    setLoading('tbody-dipendenti', 6);
-    await _loadSediSelects();
+    loading('tb-dip', 6);
+    await _fillSedi();
     try {
-      const filtroSede = document.getElementById('filter-dip-sede').value;
-      if (filtroSede) {
-        _data = await DipendenteAPI.bySede(filtroSede);
-      } else {
-        _data = await DipendenteAPI.lista();
-      }
-      render();
-      updateStatCard('stat-dipendenti', _data.length);
-    } catch (e) {
-      showToast('Errore nel caricamento dei dipendenti', 'error');
-    }
+      const filtro = document.getElementById('fl-dip-sede').value;
+      _data = filtro ? await DipendenteAPI.bySede(filtro) : await DipendenteAPI.lista();
+      render(); stat('st-dipendenti', _data.length);
+    } catch(e) { toast('Errore dipendenti', 'err'); }
   }
 
-  // ── POPOLA SELECT SEDI ──
-  async function _loadSediSelects() {
+  async function _fillSedi() {
     try {
-      const sedi = await SedeAPI.lista();
-      const opts = sedi.map(s => `<option value="${s.id}">${s.citta} — ${s.via}</option>`).join('');
-
-      document.getElementById('dip-sede-select').innerHTML =
-        '<option value="" disabled selected>Seleziona sede</option>' + opts;
-
-      document.getElementById('filter-dip-sede').innerHTML =
-        '<option value="">Tutte le sedi</option>' +
-        sedi.map(s => `<option value="${s.id}">${s.citta}</option>`).join('');
-    } catch (e) {}
+      const list = await SedeAPI.lista();
+      const opts = list.map(s => `<option value="${s.id}">${s.citta} — ${s.via}</option>`).join('');
+      document.getElementById('dip-sede-sel').innerHTML = '<option value="" disabled selected>Seleziona...</option>' + opts;
+      document.getElementById('fl-dip-sede').innerHTML  = '<option value="">Tutte le sedi</option>' +
+        list.map(s => `<option value="${s.id}">${s.citta}</option>`).join('');
+    } catch(e) {}
   }
 
-  // ── RENDER TABLE ──
   function render() {
-    const tbody = document.getElementById('tbody-dipendenti');
-    if (!_data.length) {
-      setEmpty('tbody-dipendenti', 6, 'Nessun dipendente presente');
-      return;
-    }
-    tbody.innerHTML = _data.map(d => `
+    const tb = document.getElementById('tb-dip');
+    if (!_data.length) { empty('tb-dip', 6, 'Nessun dipendente'); return; }
+    tb.innerHTML = _data.map(d => `
       <tr>
-        <td><span class="badge-id">#${d.id}</span></td>
-        <td><strong>${d.nome}</strong></td>
+        <td><span class="tag tag-id">#${d.id}</span></td>
+        <td class="td-main">${d.nome}</td>
         <td>${d.cognome}</td>
-        <td><span class="badge-anni">${d.anniEsperienza} anni</span></td>
-        <td><span class="badge-tag">${d.sedeCitta}</span></td>
+        <td><span class="tag tag-amber">${d.anniEsperienza} yr</span></td>
+        <td><span class="tag tag-sky">${d.sedeCitta}</span></td>
         <td>
-          <button class="btn btn-outline-primary btn-sm me-1" onclick="DipendentiModule.edit(${d.id})">
-            <i class="bi bi-pencil"></i> Modifica
-          </button>
-          <button class="btn btn-outline-danger btn-sm" onclick="DipendentiModule.remove(${d.id})">
-            <i class="bi bi-trash"></i> Elimina
-          </button>
+          <button class="btn btn-sky btn-sm me-1" onclick="DipendentiModule.edit(${d.id})">✎ modifica</button>
+          <button class="btn btn-coral btn-sm" onclick="DipendentiModule.remove(${d.id})">✕ elimina</button>
         </td>
       </tr>`).join('');
   }
 
-  // ── SAVE ──
   async function save() {
     const id             = document.getElementById('dip-id').value;
     const nome           = document.getElementById('dip-nome').value.trim();
     const cognome        = document.getElementById('dip-cognome').value.trim();
-    const anniEsperienza = parseInt(document.getElementById('dip-anni').value);
-    const sedeId         = parseInt(document.getElementById('dip-sede-select').value);
-
-    if (!nome || !cognome || isNaN(anniEsperienza) || !sedeId) {
-      showToast('Compila tutti i campi', 'error');
-      return;
-    }
-
+    const anniEsperienza = +document.getElementById('dip-anni').value;
+    const sedeId         = +document.getElementById('dip-sede-sel').value;
+    if (!nome || !cognome || isNaN(anniEsperienza) || !sedeId) { toast('Compila tutti i campi', 'err'); return; }
     try {
-      if (id) {
-        await DipendenteAPI.update({ id: parseInt(id), nome, cognome, anniEsperienza, sedeId });
-        showToast('Dipendente aggiornato con successo');
-      } else {
-        await DipendenteAPI.insert({ nome, cognome, anniEsperienza, sedeId });
-        showToast('Dipendente creato con successo');
-      }
-      reset();
-      load();
-    } catch (e) {
-      showToast(e.message, 'error');
-    }
+      if (id) { await DipendenteAPI.update({ id: +id, nome, cognome, anniEsperienza, sedeId }); toast('Dipendente aggiornato'); }
+      else    { await DipendenteAPI.insert({ nome, cognome, anniEsperienza, sedeId }); toast('Dipendente creato'); }
+      reset(); load();
+    } catch(e) { toast(e.message, 'err'); }
   }
 
-  // ── EDIT ──
   function edit(id) {
     const d = _data.find(x => x.id === id);
-    if (!d) return;
-
-    document.getElementById('dip-id').value          = d.id;
-    document.getElementById('dip-nome').value        = d.nome;
-    document.getElementById('dip-cognome').value     = d.cognome;
-    document.getElementById('dip-anni').value        = d.anniEsperienza;
-    document.getElementById('dip-sede-select').value = d.sedeId;
-    document.getElementById('dip-form-title').textContent = `Modifica Dipendente #${d.id}`;
-    document.getElementById('dip-nome').focus();
+    document.getElementById('dip-id').value       = d.id;
+    document.getElementById('dip-nome').value     = d.nome;
+    document.getElementById('dip-cognome').value  = d.cognome;
+    document.getElementById('dip-anni').value     = d.anniEsperienza;
+    document.getElementById('dip-sede-sel').value = d.sedeId;
+    document.getElementById('dip-form-title').textContent = `Modifica Dipendente #${id}`;
   }
 
-  // ── DELETE ──
   async function remove(id) {
-    const ok = await showConfirm('Sei sicuro di voler eliminare questo dipendente?');
-    if (!ok) return;
-    try {
-      await DipendenteAPI.delete(id);
-      showToast('Dipendente eliminato');
-      load();
-    } catch (e) {
-      showToast(e.message, 'error');
-    }
+    if (!await confirm('Eliminare questo dipendente?')) return;
+    try { await DipendenteAPI.delete(id); toast('Dipendente eliminato'); load(); }
+    catch(e) { toast(e.message, 'err'); }
   }
 
-  // ── RESET ──
   function reset() {
-    document.getElementById('dip-id').value          = '';
-    document.getElementById('dip-nome').value        = '';
-    document.getElementById('dip-cognome').value     = '';
-    document.getElementById('dip-anni').value        = '';
-    document.getElementById('dip-sede-select').value = '';
+    ['dip-id','dip-nome','dip-cognome','dip-anni'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('dip-sede-sel').value = '';
     document.getElementById('dip-form-title').textContent = 'Nuovo Dipendente';
   }
 

@@ -1,5 +1,9 @@
 package com.springbootAzienda.portaleAziendale.entity;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -17,6 +21,9 @@ public class DipendenteEntity {
     @ManyToOne
     @JoinColumn(name = "sede_id", nullable = false)
     private SedeEntity sede;
+
+    @ManyToMany(mappedBy = "dipendenti")
+    private Set<ProgettoEntity> progetti = new HashSet<>();
 
     public DipendenteEntity() {}
 
@@ -41,4 +48,27 @@ public class DipendenteEntity {
 
     public SedeEntity getSede() { return sede; }
     public void setSede(SedeEntity sede) { this.sede = sede; }
+
+    public Set<ProgettoEntity> getProgetti() { return progetti; }
+    public void setProgetti(Set<ProgettoEntity> progetti) { this.progetti = progetti; }
+
+    /* --- equals & hashCode basati su ID --- */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DipendenteEntity)) return false;
+        DipendenteEntity that = (DipendenteEntity) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    /* --- toString utile per debug --- */
+    @Override
+    public String toString() {
+        return nome + " " + cognome + " (ID: " + id + ")";
+    }
 }
