@@ -1,31 +1,19 @@
-pipeline {
-    agent any
+node {
+    
+    stage('Checkout') {
+        git branch: 'master',
+            url: 'https://github.com/vicente490x/PortaleAzienda.git'
+    }
 
-    stages {
+    stage('Build') {
+        sh "mvn clean install -DskipTests=false"
+    }
 
-        stage('Checkout') {
-            steps {
-                git branch: 'master',
-                    url: 'https://github.com/vicente490x/PortaleAzienda.git'
-            }
-        }
+    stage('Package') {
+        sh "mvn package"
+    }
 
-        stage('Build') {
-            steps {
-                sh 'mvn clean install -DskipTests=false'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'mvn package'
-            }
-        }
-
-        stage('Archive Artifact') {
-            steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            }
-        }
+    stage('Archive Artifact') {
+        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
     }
 }
